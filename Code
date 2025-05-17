@@ -1,0 +1,77 @@
+#include <WiFi.h>
+#include <WebServer.h>
+
+const char* ssid = "12221";
+const char* password = "3564q12346";
+
+// LED 핀 설정
+const int led1 = 2;    // 내장 LED (GPIO 2)
+const int led2 = 21;   // 외부 LED 연결 핀 (GPIO 21)
+
+WebServer server(80);
+
+void handleRoot() {
+  String html = "<h1>ESP32 LED Control</h1>"
+                "<p><a href=\"/led1/on\"><button>내장 LED ON</button></a>&nbsp;"
+                "<a href=\"/led1/off\"><button>내장 LED OFF</button></a></p>"
+                "<p><a href=\"/led2/on\"><button>외부 LED ON</button></a>&nbsp;"
+                "<a href=\"/led2/off\"><button>외부 LED OFF</button></a></p>";
+  server.send(200, "text/html", html);
+}
+
+void handleLED1On() {
+  digitalWrite(led1, HIGH);
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+
+void handleLED1Off() {
+  digitalWrite(led1, LOW);
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+
+void handleLED2On() {
+  digitalWrite(led2, HIGH);
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+
+void handleLED2Off() {
+  digitalWrite(led2, LOW);
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(led1, OUTPUT);
+  pinMode(led2, OUTPUT);
+
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi");
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.println("WiFi connected!");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.localIP());
+
+  server.on("/", handleRoot);
+  server.on("/led1/on", handleLED1On);
+  server.on("/led1/off", handleLED1Off);
+  server.on("/led2/on", handleLED2On);
+  server.on("/led2/off", handleLED2Off);
+
+  server.begin();
+  Serial.println("HTTP server started");
+}
+
+void loop() {
+  server.handleClient();
+}
